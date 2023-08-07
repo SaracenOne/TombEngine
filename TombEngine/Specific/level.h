@@ -150,12 +150,12 @@ bool LoadLevelFile(int levelIndex);
 void FreeLevel();
 
 void LoadTextures();
-void LoadRooms();
-void LoadItems();
-void LoadObjects();
+void LoadRooms(unsigned char version[4]);
+void LoadItems(unsigned char version[4]);
+void LoadObjects(unsigned char version[4]);
 void LoadCameras();
-void LoadSprites();
-void LoadBoxes();
+void LoadSprites(unsigned char version[4]);
+void LoadBoxes(unsigned char version[4]);
 void LoadSamples();
 void LoadSoundSources();
 void LoadAnimatedTextures();

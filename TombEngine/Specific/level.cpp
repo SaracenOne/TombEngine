@@ -39,6 +39,18 @@ std::vector<int> MoveablesIds;
 std::vector<int> StaticObjectsIds;
 LEVEL g_Level;
 
+bool IsVersionLessThan(unsigned char *version1, const unsigned char* version2) {
+	for (int i = 0; i < 4; i++) {
+		if (version1[i] < version2[i]) {
+			return true;
+		}
+		else if (version1[i] > version2[i]) {
+			return false;
+		}
+	}
+	return false;
+}
+
 unsigned char ReadUInt8()
 {
 	unsigned char value = *(unsigned char*)LevelDataPtr;
@@ -599,11 +611,21 @@ void LoadTextures()
 	ReadBytes(g_Level.SkyTexture.colorMapData.data(), size);
 }
 
-void ReadRooms()
+void ReadRooms(unsigned char version[4])
 {
 	int numRooms = ReadInt32();
 	TENLog("Num rooms: " + std::to_string(numRooms), LogLevel::Info);
 
+	bool flip_normals = false;
+
+	// Old level versions have inverted normals
+	{
+		const unsigned char MIN_VERSION[4] = { 1, 6, 4, 0 };
+		if (IsVersionLessThan(version, MIN_VERSION)) {
+			flip_normals = true;
+		}
+	}
+	
 	g_Level.Rooms.reserve(numRooms);
 	for (int i = 0; i < numRooms; i++)
 	{
@@ -666,8 +688,12 @@ void ReadRooms()
 					poly.indices[n] = ReadInt32();
 				for (int n = 0; n < count; n++)
 					poly.textureCoordinates[n] = ReadVector2();
-				for (int n = 0; n < count; n++)
-					poly.normals[n] = ReadVector3();
+				if (flip_normals)
+					for (int n = 0; n < count; n++)
+						-poly.normals[n] = ReadVector3();
+				else
+					for (int n = 0; n < count; n++)
+						poly.normals[n] = ReadVector3();
 				for (int n = 0; n < count; n++)
 					poly.tangents[n] = ReadVector3();
 				for (int n = 0; n < count; n++)
@@ -831,13 +857,13 @@ void ReadRooms()
 	}
 }
 
-void LoadRooms()
+void LoadRooms(unsigned char version[4])
 {
 	TENLog("Loading rooms... ", LogLevel::Info);
 	
 	Wibble = 0;
 
-	ReadRooms();
+	ReadRooms(version);
 	BuildOutsideRoomsTable();
 
 	int numFloorData = ReadInt32(); 
@@ -1126,18 +1152,18 @@ bool LoadLevel(int levelIndex)
 
 		g_Renderer.UpdateProgress(20);
 
-		LoadRooms();
+		LoadRooms(version);
 		g_Renderer.UpdateProgress(40);
 
 		LoadObjects();
 		g_Renderer.UpdateProgress(50);
 
-		LoadSprites();
+		LoadSprites(version);
 		LoadCameras();
 		LoadSoundSources();
 		g_Renderer.UpdateProgress(60);
 
-		LoadBoxes();
+		LoadBoxes(version);
 
 		//InitializeLOTarray(true);
 
@@ -1239,7 +1265,7 @@ void LoadSamples()
 	free(buffer);
 }
 
-void LoadBoxes()
+void LoadBoxes(unsigned char version[4])
 {
 	// Read boxes
 	int numBoxes = ReadInt32();
@@ -1254,7 +1280,17 @@ void LoadBoxes()
 	ReadBytes(g_Level.Overlaps.data(), numOverlaps * sizeof(OVERLAP));
 
 	// Read zones
-	int numZoneGroups = ReadInt32();
+	int numZoneGroups = 0;
+	{
+		const unsigned char MIN_VERSION[4] = { 1, 6, 1, 0 };
+		if (IsVersionLessThan(version, MIN_VERSION)) {
+			numZoneGroups = 6;
+		}
+		else {
+			numZoneGroups = ReadInt32();
+		}
+	}
+
 	TENLog("Num zone groups: " + std::to_string(numZoneGroups), LogLevel::Info);
 
 	for (int i = 0; i < 2; i++)
@@ -1297,8 +1333,15 @@ bool LoadLevelFile(int levelIndex)
 	return LevelLoadTask.get();
 }
 
-void LoadSprites()
+void LoadSprites(unsigned char version[4])
 {
+	{
+		unsigned char MIN_VERSION[4] = { 1, 6, 1, 0 };
+		if (IsVersionLessThan(version, MIN_VERSION)) {
+			ReadInt32(); // SPR\0
+		}
+	}
+
 	int numSprites = ReadInt32();
 	g_Level.Sprites.resize(numSprites);
 
