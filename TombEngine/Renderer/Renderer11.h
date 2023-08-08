@@ -749,6 +749,7 @@ namespace TEN::Renderer
 		std::string GetDefaultAdapterName();
 
 		Vector2i			   GetScreenResolution() const;
+		Vector2i               GetWindowResolution() const;
 		std::optional<Vector2> Get2DPosition(const Vector3& pos) const;
 		Vector3				   GetAbsEntityBonePosition(int itemNumber, int jointIndex, const Vector3& relOffset = Vector3::Zero);
 

@@ -522,6 +522,11 @@ namespace TEN::Renderer
 		return Vector2i(m_screenWidth, m_screenHeight);
 	}
 
+	Vector2i Renderer11::GetWindowResolution() const
+	{
+		return Vector2i(m_windowWidth, m_windowHeight);
+	}
+
 	std::optional<Vector2> Renderer11::Get2DPosition(const Vector3& pos) const
 	{
 		auto point = Vector4(pos.x, pos.y, pos.z, 1.0f);
