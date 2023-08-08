@@ -24,6 +24,7 @@ struct WINAPP
     bool isInScene;
 };
 
+extern WINAPP App;
 extern bool DebugMode;
 extern HWND WindowsHandle;
 

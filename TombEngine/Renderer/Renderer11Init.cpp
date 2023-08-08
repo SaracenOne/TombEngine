@@ -28,8 +28,11 @@ void TEN::Renderer::Renderer11::Initialize(int w, int h, bool windowed, HWND han
 
 	m_screenWidth = w;
 	m_screenHeight = h;
+	m_windowWidth = w;
+	m_windowHeight = h;
 	m_windowed = windowed;
 	InitializeScreen(w, h, handle, false);
+	SetFullScreen();
 	InitializeCommonTextures();
 
 	// Initialize render states
@@ -300,8 +303,8 @@ void TEN::Renderer::Renderer11::InitializeSky()
 void TEN::Renderer::Renderer11::InitializeScreen(int w, int h, HWND handle, bool reset)
 {
 	DXGI_SWAP_CHAIN_DESC sd;
-	sd.BufferDesc.Width = w;
-	sd.BufferDesc.Height = h;
+	sd.BufferDesc.Width = m_windowWidth;
+	sd.BufferDesc.Height = m_windowHeight;
 	sd.BufferDesc.RefreshRate.Numerator = 0;
 	sd.BufferDesc.RefreshRate.Denominator = 0;
 	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -336,8 +339,8 @@ void TEN::Renderer::Renderer11::InitializeScreen(int w, int h, HWND handle, bool
 	Utils::throwIfFailed(m_device->CreateRenderTargetView(m_backBufferTexture, NULL, &m_backBufferRTV));
 
 	D3D11_TEXTURE2D_DESC depthStencilDesc;
-	depthStencilDesc.Width = w;
-	depthStencilDesc.Height = h;
+	depthStencilDesc.Width = m_windowWidth;
+	depthStencilDesc.Height = m_windowHeight;
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.ArraySize = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -371,8 +374,8 @@ void TEN::Renderer::Renderer11::InitializeScreen(int w, int h, HWND handle, bool
 	// Initialize viewport
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
-	m_viewport.Width = w;
-	m_viewport.Height = h;
+	m_viewport.Width = m_windowWidth;
+	m_viewport.Height = m_windowHeight;
 	m_viewport.MinDepth = 0.0f;
 	m_viewport.MaxDepth = 1.0f;
 
@@ -385,8 +388,6 @@ void TEN::Renderer::Renderer11::InitializeScreen(int w, int h, HWND handle, bool
 
 	m_viewportToolkit = Viewport(m_viewport.TopLeftX, m_viewport.TopLeftY, m_viewport.Width, m_viewport.Height,
 		m_viewport.MinDepth, m_viewport.MaxDepth);
-
-	SetFullScreen();
 }
 
 void Renderer11::InitializeCommonTextures()
@@ -439,6 +440,15 @@ void Renderer11::ToggleFullScreen(bool force)
 {
 	m_windowed = force ? false : !m_windowed;
 	SetFullScreen();
+
+	if (g_Renderer.IsFullsScreen())
+	{
+		SetCursor(NULL);
+	}
+	else
+	{
+		SetCursor(App.WindowClass.hCursor);
+	}
 }
 
 void Renderer11::SetFullScreen()
@@ -463,7 +473,7 @@ void Renderer11::SetFullScreen()
 		SetWindowLongPtr(WindowsHandle, GWL_STYLE, WS_OVERLAPPEDWINDOW);
 		SetWindowLongPtr(WindowsHandle, GWL_EXSTYLE, 0);
 		ShowWindow(WindowsHandle, SW_SHOWNORMAL);
-		SetWindowPos(WindowsHandle, HWND_TOP, 0, 0, m_screenWidth + borderWidth, m_screenHeight + borderHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+		SetWindowPos(WindowsHandle, HWND_TOP, 0, 0, m_windowWidth + borderWidth, m_windowHeight + borderHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 	}
 
 	UpdateWindow(WindowsHandle);

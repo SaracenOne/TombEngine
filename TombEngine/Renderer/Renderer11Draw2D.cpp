@@ -311,34 +311,49 @@ namespace TEN::Renderer
 		m_context->ClearRenderTargetView(target, Colors::Black);
 		m_context->ClearDepthStencilView(depthTarget, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 		m_context->OMSetRenderTargets(1, &target, depthTarget);
-		m_context->RSSetViewports(1, &view.Viewport);
-		ResetScissor();
+		m_context->RSSetViewports(1, &screenCamera.Viewport);
+
+		SetScissor(RendererRectangle(0, 0, m_windowWidth, m_windowHeight));
+
+		float screenAspect = static_cast<float>(m_screenWidth) / static_cast<float>(m_screenHeight);
+		float windowAspect = static_cast<float>(m_windowWidth) / static_cast<float>(m_windowHeight);
+
+		float aspectRatioCorrectionY = 0.0;
+		float aspectRatioCorrectionX = 0.0;
+		if (screenAspect > windowAspect) {
+			aspectRatioCorrectionX = 1.0f;
+			aspectRatioCorrectionY = windowAspect / screenAspect;
+		}
+		else {
+			aspectRatioCorrectionX = screenAspect / windowAspect;
+			aspectRatioCorrectionY = 1.0f;
+		}
 
 		RendererVertex vertices[4];
 
-		vertices[0].Position.x = -1.0f;
-		vertices[0].Position.y = 1.0f;
+		vertices[0].Position.x = -1.0f * aspectRatioCorrectionX;
+		vertices[0].Position.y = 1.0f * aspectRatioCorrectionY;
 		vertices[0].Position.z = 0.0f;
 		vertices[0].UV.x = 0.0f;
 		vertices[0].UV.y = 0.0f;
 		vertices[0].Color = Vector4::One;
 
-		vertices[1].Position.x = 1.0f;
-		vertices[1].Position.y = 1.0f;
+		vertices[1].Position.x = 1.0f * aspectRatioCorrectionX;
+		vertices[1].Position.y = 1.0f * aspectRatioCorrectionY;
 		vertices[1].Position.z = 0.0f;
 		vertices[1].UV.x = 1.0f;
 		vertices[1].UV.y = 0.0f;
 		vertices[1].Color = Vector4::One;
 
-		vertices[2].Position.x = 1.0f;
-		vertices[2].Position.y = -1.0f;
+		vertices[2].Position.x = 1.0f * aspectRatioCorrectionX;
+		vertices[2].Position.y = -1.0f * aspectRatioCorrectionY;
 		vertices[2].Position.z = 0.0f;
 		vertices[2].UV.x = 1.0f;
 		vertices[2].UV.y = 1.0f;
 		vertices[2].Color = Vector4::One;
 
-		vertices[3].Position.x = -1.0f;
-		vertices[3].Position.y = -1.0f;
+		vertices[3].Position.x = -1.0f * aspectRatioCorrectionX;
+		vertices[3].Position.y = -1.0f * aspectRatioCorrectionY;
 		vertices[3].Position.z = 0.0f;
 		vertices[3].UV.x = 0.0f;
 		vertices[3].UV.y = 1.0f;
@@ -351,18 +366,20 @@ namespace TEN::Renderer
 		m_context->IASetInputLayout(m_inputLayout.Get());
 
 		m_stPostProcessBuffer.FXAA = g_Configuration.AntialiasingMode == AntialiasingMode::Low ? 1 : 0;
-		m_stPostProcessBuffer.ViewportWidth = m_screenWidth;
-		m_stPostProcessBuffer.ViewportHeight = m_screenHeight;
+		m_stPostProcessBuffer.ViewportWidth = m_windowWidth;
+		m_stPostProcessBuffer.ViewportHeight = m_windowHeight;
 		m_stPostProcessBuffer.ScreenFadeFactor = ScreenFadeCurrent;
 		m_stPostProcessBuffer.CinematicBarsHeight = Smoothstep(CinematicBarsHeight) * SPOTCAM_CINEMATIC_BARS_HEIGHT;
 		m_cbPostProcessBuffer.updateData(m_stPostProcessBuffer, m_context.Get());
 		BindConstantBufferPS(CB_POSTPROCESS, m_cbPostProcessBuffer.get());
 
-		BindTexture(TEXTURE_COLOR_MAP, &m_renderTarget, SAMPLER_ANISOTROPIC_CLAMP);
+		BindTexture(TEXTURE_COLOR_MAP, &m_renderTarget, SAMPLER_POINT_WRAP);
 
 		m_primitiveBatch->Begin();
 		m_primitiveBatch->DrawQuad(vertices[0], vertices[1], vertices[2], vertices[3]);
 		m_primitiveBatch->End();
+
+		ResetScissor();
 	}
 
 	void Renderer11::DrawFullScreenImage(ID3D11ShaderResourceView* texture, float fade, ID3D11RenderTargetView* target,
@@ -441,6 +458,14 @@ namespace TEN::Renderer
 		m_primitiveBatch->Begin();
 		m_primitiveBatch->DrawQuad(vertices[0], vertices[1], vertices[2], vertices[3]);
 		m_primitiveBatch->End();
+	}
+
+	void Renderer11::UpdateWindowSize(const unsigned int width, const unsigned int height)
+	{
+		m_windowWidth = width;
+		m_windowHeight = height;
+
+		m_swapChainRequiresUpdate = true;
 	}
 
 	void Renderer11::DrawFullScreenQuad(ID3D11ShaderResourceView* texture, Vector3 color, bool fit)

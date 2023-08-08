@@ -2289,6 +2289,11 @@ namespace TEN::Renderer
 
 	void Renderer11::Render()
 	{
+		if (m_swapChainRequiresUpdate) {
+			m_swapChainRequiresUpdate = false;
+			UpdateViewport();
+		}
+
 		//RenderToCubemap(m_reflectionCubemap, Vector3(LaraItem->pos.xPos, LaraItem->pos.yPos - 1024, LaraItem->pos.zPos), LaraItem->roomNumber);
 		RenderScene(m_backBufferRTV, m_depthStencilView, gameCamera);
 		m_context->ClearState();

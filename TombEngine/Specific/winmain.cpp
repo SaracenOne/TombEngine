@@ -53,7 +53,7 @@ Vector2i GetScreenResolution()
 {
 	RECT desktop;
 	const HWND hDesktop = GetDesktopWindow();
-	GetWindowRect(hDesktop, &desktop);
+	GetClientRect(hDesktop, &desktop);
 	Vector2i resolution;
 	resolution.x = desktop.right;
 	resolution.y = desktop.bottom;
@@ -140,32 +140,6 @@ void WinProcMsg()
 	while (!ThreadEnded && Msg.message != WM_QUIT);
 }
 
-void CALLBACK HandleWmCommand(unsigned short wParam)
-{
-	if (wParam == WM_KILLFOCUS)
-	{
-		// make sure we suspend the game (if focus is removed) only if the level is not being loaded
-		
-		if (!LevelLoadTask.valid())
-		{
-			SuspendThread((HANDLE)ThreadHandle);
-			g_Renderer.ToggleFullScreen();
-			ResumeThread((HANDLE)ThreadHandle);
-
-			if (g_Renderer.IsFullsScreen())
-			{
-				SetCursor(nullptr);
-				ShowCursor(false);
-			}
-			else
-			{
-				SetCursor(LoadCursorA(App.hInstance, (LPCSTR)0x68));
-				ShowCursor(true);
-			}
-		}
-	}
-}
-
 LRESULT CALLBACK WinAppProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	static bool receivedWmClose = false;
@@ -176,11 +150,43 @@ LRESULT CALLBACK WinAppProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		return 0;
 	}
 
+	if (msg == WM_SIZE) {
+		unsigned short new_width = (unsigned short)lParam;
+		unsigned short new_height = (unsigned short)((lParam >> 16) & 0xFFFF);
+		g_Renderer.UpdateWindowSize(new_width, new_height);
+
+		return DefWindowProcA(hWnd, msg, wParam, (LPARAM)lParam);
+	}
+
+	if (msg == WM_SETCURSOR) {
+		if (g_Renderer.IsFullsScreen())
+		{
+			SetCursor(NULL);
+		}
+		else
+		{
+			SetCursor(App.WindowClass.hCursor);
+		}
+
+		return DefWindowProcA(hWnd, msg, wParam, (LPARAM)lParam);
+	}
+
+	if (msg == WM_MOUSEMOVE) {
+		if (g_Renderer.IsFullsScreen())
+		{
+			SetCursor(NULL);
+		}
+		else
+		{
+			SetCursor(App.WindowClass.hCursor);
+		}
+
+		return DefWindowProcA(hWnd, msg, wParam, (LPARAM)lParam);
+	}
+
+
 	if (msg > WM_CLOSE)
 	{
-		if (msg == WM_COMMAND)
-			HandleWmCommand((unsigned short)wParam);
-
 		return DefWindowProcA(hWnd, msg, wParam, (LPARAM)lParam);
 	}
 
@@ -359,7 +365,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	App.WindowClass.lpfnWndProc = WinAppProc;
 	App.WindowClass.cbClsExtra = 0;
 	App.WindowClass.cbWndExtra = 0;
-	App.WindowClass.hCursor = LoadCursor(App.hInstance, IDC_ARROW);
+	App.WindowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 
 	// Register main window.
 	if (!RegisterClass(&App.WindowClass))
@@ -450,8 +456,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		UpdateWindow(WindowsHandle);
 		ShowWindow(WindowsHandle, nShowCmd);
 
-		SetCursor(NULL);
-		ShowCursor(FALSE);
+		SetCursor(App.WindowClass.hCursor);
+		ShowCursor(TRUE);
 		hAccTable = LoadAccelerators(hInstance, (LPCSTR)0x65);
 	}
 	catch (std::exception& ex)

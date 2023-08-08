@@ -341,6 +341,7 @@ namespace TEN::Renderer
 
 		// Constant buffers
 		RenderView gameCamera;
+		RenderView screenCamera;
 		ConstantBuffer<CCameraMatrixBuffer> m_cbCameraMatrices;
 		CItemBuffer m_stItem;
 		ConstantBuffer<CItemBuffer> m_cbItem;
@@ -471,6 +472,11 @@ namespace TEN::Renderer
 		int m_timeDraw;
 		int m_timeFrame;
 		float m_fps;
+
+		// Window settings
+		int m_windowWidth = 0;
+		int m_windowHeight = 0;
+		bool m_swapChainRequiresUpdate = false;
 
 		// Screen settings
 		int m_screenWidth;
@@ -730,6 +736,7 @@ namespace TEN::Renderer
 		void AddDebugBox(const Vector3& min, const Vector3& max, const Vector4& color, RendererDebugPage page);
 		void AddSphere(const Vector3& center, float radius, const Vector4& color);
 		void AddDebugSphere(const Vector3& center, float radius, const Vector4& color, RendererDebugPage page);
+		void UpdateViewport();
 		void ChangeScreenResolution(int width, int height, bool windowed);
 		void FlipRooms(short roomNumber1, short roomNumber2);
 		void UpdateLaraAnimations(bool force);
@@ -747,6 +754,7 @@ namespace TEN::Renderer
 
 		void DrawSpriteIn2DSpace(GAME_OBJECT_ID spriteID, unsigned int spriteIndex, const Vector2& pos2D, short orient2D,
 								 const Vector4& color, const Vector2& size);
+		void UpdateWindowSize(const unsigned int width, const unsigned int height);
 	};
 
 	extern Renderer11 g_Renderer;
