@@ -10,6 +10,10 @@ namespace TEN::Renderer
 {
 	void Renderer11::UpdateViewport()
 	{
+		if (m_windowHeight <= 0 || m_windowWidth <= 0) {
+			return;
+		}
+
 		ID3D11RenderTargetView* nullViews[] = { nullptr };
 		m_context->OMSetRenderTargets(0, nullViews, NULL);
 
