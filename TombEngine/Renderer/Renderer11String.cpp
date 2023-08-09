@@ -41,52 +41,8 @@ namespace TEN::Renderer
 			float fontSpacing = m_gameFont->GetLineSpacing();
 			float fontScale = REFERENCE_FONT_SIZE / fontSpacing;
 
-			float virtualScreenAspect = static_cast<float>(SCREEN_SPACE_RES.x) / static_cast<float>(SCREEN_SPACE_RES.y);
-			float screenAspect = static_cast<float>(m_screenWidth) / static_cast<float>(m_screenHeight);
-			float windowAspect = static_cast<float>(m_windowWidth) / static_cast<float>(m_windowHeight);
-
-			// Calculate the offset and scale of the text based on the aspect ratio
-			auto aspectRatioCorrection = Vector2();
-
-			auto rescaledPos = Vector2(pos.x / SCREEN_SPACE_RES.x, pos.y / SCREEN_SPACE_RES.y);
-			auto screenOffset = Vector2();
-
-			if (screenAspect > windowAspect)
-			{
-				// Bar Top
-				aspectRatioCorrection.x = 0;
-				aspectRatioCorrection.y = windowAspect / screenAspect;
-
-				screenOffset.x = 0;
-				screenOffset.y = (1.0 - aspectRatioCorrection.y) * windowRes.y;
-
-				uiScale *= ((float)m_windowWidth / (float)m_screenWidth);
-			}
-			else
-			{
-				// Bar Side
-				aspectRatioCorrection.x = screenAspect / windowAspect;
-				aspectRatioCorrection.y = 0;
-
-				screenOffset.x = (1.0 - aspectRatioCorrection.x) * windowRes.x;
-				screenOffset.y = 0;
-
-				uiScale *= ((float)m_windowHeight / (float)m_screenHeight);
-			}
-
-			auto aspectOffsetStart = Vector2(
-				((screenOffset.x - (screenOffset.x * 0.5))),
-				((screenOffset.y - (screenOffset.y * 0.5)))
-			);
-			auto aspectOffsetEnd = Vector2(
-				m_windowWidth - ((screenOffset.x - (screenOffset.x * 0.5))),
-				m_windowHeight - ((screenOffset.y - (screenOffset.y * 0.5)))
-			);
-
-			auto aspectOffset = Vector2(
-				Lerp(aspectOffsetStart.x, aspectOffsetEnd.x, rescaledPos.x),
-				Lerp(aspectOffsetStart.y, aspectOffsetEnd.y, rescaledPos.y)
-			);
+			Vector3 aspectOffset = CalculateAspectCorrectedPosition(screenRes, windowRes, pos, uiScale);
+			uiScale = aspectOffset.z;
 			
 			auto stringLines = SplitString(string);
 			float yOffset = 0.0f;

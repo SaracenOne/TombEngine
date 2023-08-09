@@ -597,4 +597,48 @@ namespace TEN::Renderer
 		SaveWICTextureToFile(m_context.Get(), m_backBufferTexture, GUID_ContainerFormatPng, TEN::Utils::ToWString(screenPath).c_str(),
 			&GUID_WICPixelFormat24bppBGR, nullptr, true);
 	}
+
+	Vector3 Renderer11::CalculateAspectCorrectedPosition(Vector2i screenRes, Vector2i windowRes, Vector2 pos, float scale) {
+		float screenAspect = static_cast<float>(screenRes.x) / static_cast<float>(screenRes.y);
+		float windowAspect = static_cast<float>(windowRes.x) / static_cast<float>(windowRes.y);
+
+		// Calculate the offset and scale of the text based on the aspect ratio
+		auto aspectRatioCorrection = Vector2();
+
+		auto rescaledPos = Vector2(pos.x / SCREEN_SPACE_RES.x, pos.y / SCREEN_SPACE_RES.y);
+		auto screenOffset = Vector2();
+
+		if (screenAspect > windowAspect)
+		{
+			screenOffset.x = 0;
+			screenOffset.y = (1.0 - (windowAspect / screenAspect)) * windowRes.y;
+
+			scale *= ((float)windowRes.x / (float)screenRes.x);
+		}
+		else
+		{
+			auto aspectRatioCorrection = Vector2(screenAspect / windowAspect, 0.0);
+
+			screenOffset.x = (1.0 - (screenAspect / windowAspect)) * windowRes.x;
+			screenOffset.y = 0;
+
+			scale *= ((float)windowRes.y / (float)screenRes.y);
+		}
+
+		auto aspectOffsetStart = Vector2(
+			((screenOffset.x - (screenOffset.x * 0.5))),
+			((screenOffset.y - (screenOffset.y * 0.5)))
+		);
+		auto aspectOffsetEnd = Vector2(
+			windowRes.x - ((screenOffset.x - (screenOffset.x * 0.5))),
+			windowRes.y - ((screenOffset.y - (screenOffset.y * 0.5)))
+		);
+
+		auto aspectOffset = Vector2(
+			Lerp(aspectOffsetStart.x, aspectOffsetEnd.x, rescaledPos.x),
+			Lerp(aspectOffsetStart.y, aspectOffsetEnd.y, rescaledPos.y)
+		);
+
+		return Vector3(aspectOffset.x, aspectOffset.y, scale);
+	}
 }
