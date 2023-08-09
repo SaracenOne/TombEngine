@@ -462,10 +462,12 @@ namespace TEN::Renderer
 
 	void Renderer11::UpdateWindowSize(const unsigned int width, const unsigned int height)
 	{
-		m_windowWidth = width;
-		m_windowHeight = height;
+		if (m_windowWidth != width || m_windowHeight != height) {
+			m_windowWidth = width;
+			m_windowHeight = height;
 
-		m_swapChainRequiresUpdate = true;
+			m_swapChainRequiresUpdate = true;
+		}
 	}
 
 	void Renderer11::DrawFullScreenQuad(ID3D11ShaderResourceView* texture, Vector3 color, bool fit)
