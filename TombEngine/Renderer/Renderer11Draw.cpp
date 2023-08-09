@@ -2291,7 +2291,7 @@ namespace TEN::Renderer
 	{
 		if (m_swapChainRequiresUpdate) {
 			m_swapChainRequiresUpdate = false;
-			UpdateViewport();
+			UpdateScreenResolution();
 		}
 
 		//RenderToCubemap(m_reflectionCubemap, Vector3(LaraItem->pos.xPos, LaraItem->pos.yPos - 1024, LaraItem->pos.zPos), LaraItem->roomNumber);

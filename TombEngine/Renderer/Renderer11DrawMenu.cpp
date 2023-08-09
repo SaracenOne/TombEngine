@@ -1067,7 +1067,7 @@ namespace TEN::Renderer
 	{
 		if (m_swapChainRequiresUpdate) {
 			m_swapChainRequiresUpdate = false;
-			UpdateViewport();
+			UpdateScreenResolution();
 		}
 
 		m_context->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_STENCIL | D3D11_CLEAR_DEPTH, 1.0f, 0);

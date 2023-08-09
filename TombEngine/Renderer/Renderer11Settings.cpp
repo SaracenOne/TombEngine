@@ -8,7 +8,21 @@
 
 namespace TEN::Renderer 
 {
-	void Renderer11::UpdateViewport()
+
+	Vector2i ClipResolutionToReferenceResolutionAspectRatio(Vector2i Resolution, Vector2i ReferenceResolution) {
+		float referenceAspectRatio = static_cast<float>(ReferenceResolution.x) / ReferenceResolution.y;
+
+		if (static_cast<float>(Resolution.x) / Resolution.y > referenceAspectRatio) {
+			Resolution.x = static_cast<int>(Resolution.y * referenceAspectRatio);
+		}
+		else {
+			Resolution.y = static_cast<int>(Resolution.x / referenceAspectRatio);
+		}
+
+		return Resolution;
+	}
+
+	void Renderer11::UpdateScreenResolution() 
 	{
 		if (m_windowHeight <= 0 || m_windowWidth <= 0) {
 			return;
@@ -30,32 +44,19 @@ namespace TEN::Renderer
 		DXGI_SWAP_CHAIN_DESC scd;
 		Utils::throwIfFailed(m_swapChain->GetDesc(&scd));
 
+		if (!g_Configuration.ScaleFramebuffer) {
+			Vector2i clipped_resolution = ClipResolutionToReferenceResolutionAspectRatio(Vector2i(m_windowWidth, m_windowHeight), Vector2i(g_Configuration.ScreenWidth, g_Configuration.ScreenHeight));
+
+			m_screenWidth = clipped_resolution.x;
+			m_screenHeight = clipped_resolution.y;
+		} else {
+			m_screenWidth = g_Configuration.ScreenWidth;
+			m_screenHeight = g_Configuration.ScreenHeight;
+		}
+
+		m_windowed = g_Configuration.EnableWindowedMode;
+
 		InitializeScreen(m_screenWidth, m_screenHeight, WindowsHandle, true);
-	}
-
-	void Renderer11::ChangeScreenResolution(int width, int height, bool windowed) 
-	{
-		ID3D11RenderTargetView* nullViews[] = { nullptr };
-		m_context->OMSetRenderTargets(0, nullViews, NULL);
-
-		m_backBufferTexture->Release();
-		m_backBufferRTV->Release();
-		m_depthStencilView->Release();
-		m_depthStencilTexture->Release();
-		m_context->Flush();
-		m_context->ClearState();
-
-		IDXGIOutput* output;
-		Utils::throwIfFailed(m_swapChain->GetContainingOutput(&output));
-
-		DXGI_SWAP_CHAIN_DESC scd;
-		Utils::throwIfFailed(m_swapChain->GetDesc(&scd));
-
-		m_screenWidth = width;
-		m_screenHeight = height;
-		m_windowed = windowed;
-
-		InitializeScreen(width, height, WindowsHandle, true);
 		SetFullScreen();
 	}
 

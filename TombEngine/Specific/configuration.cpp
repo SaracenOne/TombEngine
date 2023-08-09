@@ -182,6 +182,7 @@ bool SaveConfiguration()
 	if (SetDWORDRegKey(graphicsKey, REGKEY_SCREEN_WIDTH, g_Configuration.ScreenWidth) != ERROR_SUCCESS ||
 		SetDWORDRegKey(graphicsKey, REGKEY_SCREEN_HEIGHT, g_Configuration.ScreenHeight) != ERROR_SUCCESS ||
 		SetBoolRegKey(graphicsKey, REGKEY_ENABLE_WINDOWED_MODE, g_Configuration.EnableWindowedMode) != ERROR_SUCCESS ||
+		SetBoolRegKey(graphicsKey, REGKEY_SCALE_FRAMEBUFFER, g_Configuration.ScaleFramebuffer) != ERROR_SUCCESS ||
 		SetDWORDRegKey(graphicsKey, REGKEY_SHADOWS, DWORD(g_Configuration.ShadowType)) != ERROR_SUCCESS ||
 		SetDWORDRegKey(graphicsKey, REGKEY_SHADOW_MAP_SIZE, g_Configuration.ShadowMapSize) != ERROR_SUCCESS ||
 		SetDWORDRegKey(graphicsKey, REGKEY_SHADOW_BLOBS_MAX, g_Configuration.ShadowBlobsMax) != ERROR_SUCCESS ||
@@ -337,6 +338,7 @@ bool LoadConfiguration()
 	DWORD screenWidth = 0;
 	DWORD screenHeight = 0;
 	bool enableWindowedMode = false;
+	bool scaleFramebuffer = false;
 	DWORD shadowMode = 1;
 	DWORD shadowMapSize = 512;
 	DWORD shadowBlobsMax = 16;
@@ -347,6 +349,7 @@ bool LoadConfiguration()
 	if (GetDWORDRegKey(graphicsKey, REGKEY_SCREEN_WIDTH, &screenWidth, 0) != ERROR_SUCCESS ||
 		GetDWORDRegKey(graphicsKey, REGKEY_SCREEN_HEIGHT, &screenHeight, 0) != ERROR_SUCCESS ||
 		GetBoolRegKey(graphicsKey, REGKEY_ENABLE_WINDOWED_MODE, &enableWindowedMode, false) != ERROR_SUCCESS ||
+		GetBoolRegKey(graphicsKey, REGKEY_SCALE_FRAMEBUFFER, &scaleFramebuffer, false) != ERROR_SUCCESS ||
 		GetDWORDRegKey(graphicsKey, REGKEY_SHADOWS, &shadowMode, 1) != ERROR_SUCCESS ||
 		GetDWORDRegKey(graphicsKey, REGKEY_SHADOW_MAP_SIZE, &shadowMapSize, 512) != ERROR_SUCCESS ||
 		GetDWORDRegKey(graphicsKey, REGKEY_SHADOW_BLOBS_MAX, &shadowBlobsMax, 16) != ERROR_SUCCESS ||
@@ -457,6 +460,7 @@ bool LoadConfiguration()
 	g_Configuration.ScreenWidth = screenWidth;
 	g_Configuration.ScreenHeight = screenHeight;
 	g_Configuration.EnableWindowedMode = enableWindowedMode;
+	g_Configuration.ScaleFramebuffer = scaleFramebuffer;
 	g_Configuration.ShadowType = ShadowMode(shadowMode);
 	g_Configuration.ShadowBlobsMax = shadowBlobsMax;
 	g_Configuration.EnableCaustics = enableCaustics;
