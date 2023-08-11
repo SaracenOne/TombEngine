@@ -637,8 +637,8 @@ namespace TEN::Renderer
 		);
 
 		auto aspectOffset = Vector2(
-			Lerp(aspectOffsetStart.x, aspectOffsetEnd.x, rescaledPos.x),
-			Lerp(aspectOffsetStart.y, aspectOffsetEnd.y, rescaledPos.y)
+			aspectOffsetStart.x + (rescaledPos.x * (aspectOffsetEnd.x - aspectOffsetStart.x)),
+			aspectOffsetStart.y + (rescaledPos.y * (aspectOffsetEnd.y - aspectOffsetStart.y))
 		);
 
 		return Vector3(aspectOffset.x, aspectOffset.y, scale);
