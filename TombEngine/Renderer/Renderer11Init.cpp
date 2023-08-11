@@ -388,6 +388,11 @@ void TEN::Renderer::Renderer11::InitializeScreen(int w, int h, HWND handle, bool
 
 	m_viewportToolkit = Viewport(m_viewport.TopLeftX, m_viewport.TopLeftY, m_viewport.Width, m_viewport.Height,
 		m_viewport.MinDepth, m_viewport.MaxDepth);
+
+	Vector2 screen_scissor_top_left = CalculateAspectCorrectedPosition(Vector2i(m_screenWidth, m_screenHeight), Vector2i(m_windowWidth, m_windowHeight), Vector2(0.0, 0.0));
+	Vector2 screen_scissor_bottom_right = CalculateAspectCorrectedPosition(Vector2i(m_screenWidth, m_screenHeight), Vector2i(m_windowWidth, m_windowHeight), Vector2(SCREEN_SPACE_RES.x, SCREEN_SPACE_RES.y));
+
+	screen_scissor = RendererRectangle(screen_scissor_top_left.x, screen_scissor_top_left.y, screen_scissor_bottom_right.x, screen_scissor_bottom_right.y);
 }
 
 void Renderer11::InitializeCommonTextures()

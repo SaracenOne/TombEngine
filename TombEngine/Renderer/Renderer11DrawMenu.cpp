@@ -674,6 +674,8 @@ namespace TEN::Renderer
 
 	void Renderer11::RenderNewInventory()
 	{
+		SetScissor(screen_scissor);
+
 		g_Gui.DrawCurrentObjectList(LaraItem, RingTypes::Inventory);
 
 		if (g_Gui.GetRing(RingTypes::Ammo).RingActive)
@@ -716,12 +718,20 @@ namespace TEN::Renderer
 		UINT offset = 0;
 
 		auto screenRes = GetScreenResolution();
+		auto windowRes = GetWindowResolution();
 		auto factor = Vector2(
 			screenRes.x / SCREEN_SPACE_RES.x,
 			screenRes.y / SCREEN_SPACE_RES.y);
 
-		pos2D *= factor;
 		scale *= (factor.x > factor.y) ? factor.y : factor.x;
+
+		// Calculate scale requred to fix stretching
+		float screenAspect = static_cast<float>(screenRes.x) / static_cast<float>(screenRes.y);
+		float windowAspect = static_cast<float>(windowRes.x) / static_cast<float>(windowRes.y);
+		Vector2 scale2D = Vector2(
+			screenAspect > windowAspect ? 1.0 : 1.0 / ((float)windowRes.x / (float)screenRes.x),
+			screenAspect > windowAspect ? 1.0 / ((float)windowRes.y / (float)screenRes.y) : 1.0
+		);
 
 		int index = g_Gui.ConvertObjectToInventoryItem(objectNumber);
 		if (index != -1)
@@ -731,6 +741,10 @@ namespace TEN::Renderer
 			pos2D.y += invObject.YOffset;
 			orient += invObject.Orientation;
 		}
+
+		Vector3 aspectOffset = CalculateAspectCorrectedPosition(screenRes, windowRes, pos2D);
+		pos2D.x = aspectOffset.x;
+		pos2D.y = aspectOffset.y;
 
 		auto viewMatrix = Matrix::CreateLookAt(Vector3(0.0f, 0.0f, BLOCK(2)), Vector3::Zero, Vector3::Down);
 		auto projMatrix = Matrix::CreateOrthographic(m_screenWidth, m_screenHeight, -BLOCK(1), BLOCK(1));
@@ -785,7 +799,8 @@ namespace TEN::Renderer
 			auto tMatrix = Matrix::CreateTranslation(pos.x, pos.y, pos.z + BLOCK(1));
 			auto rotMatrix = orient.ToRotationMatrix();
 			auto scaleMatrix = Matrix::CreateScale(scale);
-			auto worldMatrix = scaleMatrix * rotMatrix * tMatrix;
+			auto scaleMatrix2D = Matrix::CreateScale(scale2D.x, scale2D.y, 1.0);
+			auto worldMatrix = scaleMatrix * rotMatrix * scaleMatrix2D * tMatrix;
 
 			if (object.animIndex != -1)
 				m_stItem.World = (*moveableObject).AnimationTransforms[n] * worldMatrix;
@@ -930,8 +945,8 @@ namespace TEN::Renderer
 
 		// Bind and clear render target
 		m_context->OMSetRenderTargets(1, &target, depthTarget);
-		m_context->RSSetViewports(1, &m_viewport);
-		ResetScissor();
+		m_context->RSSetViewports(1, &windowCamera.Viewport);
+		SetScissor(RendererRectangle(0, 0, m_windowWidth, m_windowHeight));
 
 		if (background != nullptr)
 			DrawFullScreenImage(background, 0.5f, target, depthTarget);

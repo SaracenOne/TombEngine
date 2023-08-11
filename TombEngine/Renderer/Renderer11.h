@@ -483,6 +483,9 @@ namespace TEN::Renderer
 		int m_screenHeight;
 		bool m_windowed;
 
+		// Scissors clip
+		RendererRectangle screen_scissor;
+
 		// A flag to prevent extra renderer object addition
 		bool m_Locked = false;
 
@@ -755,7 +758,7 @@ namespace TEN::Renderer
 		void DrawSpriteIn2DSpace(GAME_OBJECT_ID spriteID, unsigned int spriteIndex, const Vector2& pos2D, short orient2D,
 								 const Vector4& color, const Vector2& size);
 		void UpdateWindowSize(const unsigned int width, const unsigned int height);
-		Vector3 CalculateAspectCorrectedPosition(Vector2i screenRes, Vector2i windowRes, Vector2 pos, float scale);
+		Vector2 CalculateAspectCorrectedPosition(Vector2i screenRes, Vector2i windowRes, Vector2 pos);
 	};
 
 	extern Renderer11 g_Renderer;

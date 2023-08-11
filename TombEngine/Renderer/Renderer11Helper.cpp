@@ -600,33 +600,17 @@ namespace TEN::Renderer
 			&GUID_WICPixelFormat24bppBGR, nullptr, true);
 	}
 
-	Vector3 Renderer11::CalculateAspectCorrectedPosition(Vector2i screenRes, Vector2i windowRes, Vector2 pos, float scale) {
+	Vector2 Renderer11::CalculateAspectCorrectedPosition(Vector2i screenRes, Vector2i windowRes, Vector2 pos) {
 		float screenAspect = static_cast<float>(screenRes.x) / static_cast<float>(screenRes.y);
 		float windowAspect = static_cast<float>(windowRes.x) / static_cast<float>(windowRes.y);
 
-		// Calculate the offset and scale of the text based on the aspect ratio
 		auto aspectRatioCorrection = Vector2();
 
 		auto rescaledPos = Vector2(pos.x / SCREEN_SPACE_RES.x, pos.y / SCREEN_SPACE_RES.y);
-		auto screenOffset = Vector2();
-
-		if (screenAspect > windowAspect)
-		{
-			screenOffset.x = 0;
-			screenOffset.y = (1.0 - (windowAspect / screenAspect)) * windowRes.y;
-
-			scale *= ((float)windowRes.x / (float)screenRes.x);
-		}
-		else
-		{
-			auto aspectRatioCorrection = Vector2(screenAspect / windowAspect, 0.0);
-
-			screenOffset.x = (1.0 - (screenAspect / windowAspect)) * windowRes.x;
-			screenOffset.y = 0;
-
-			scale *= ((float)windowRes.y / (float)screenRes.y);
-		}
-
+		auto screenOffset = Vector2(
+			(screenAspect > windowAspect) ? 0 : (1.0 - (screenAspect / windowAspect)) * windowRes.x,
+			(screenAspect > windowAspect) ? (1.0 - (windowAspect / screenAspect)) * windowRes.y : 0
+		);
 		auto aspectOffsetStart = Vector2(
 			((screenOffset.x - (screenOffset.x * 0.5))),
 			((screenOffset.y - (screenOffset.y * 0.5)))
@@ -641,6 +625,6 @@ namespace TEN::Renderer
 			aspectOffsetStart.y + (rescaledPos.y * (aspectOffsetEnd.y - aspectOffsetStart.y))
 		);
 
-		return Vector3(aspectOffset.x, aspectOffset.y, scale);
+		return Vector2(aspectOffset.x, aspectOffset.y);
 	}
 }

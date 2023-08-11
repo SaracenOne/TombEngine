@@ -41,8 +41,7 @@ namespace TEN::Renderer
 			float fontSpacing = m_gameFont->GetLineSpacing();
 			float fontScale = REFERENCE_FONT_SIZE / fontSpacing;
 
-			Vector3 aspectOffset = CalculateAspectCorrectedPosition(screenRes, windowRes, pos, uiScale);
-			uiScale = aspectOffset.z;
+			Vector3 aspectOffset = CalculateAspectCorrectedPosition(screenRes, windowRes, pos);
 			
 			auto stringLines = SplitString(string);
 			float yOffset = 0.0f;
